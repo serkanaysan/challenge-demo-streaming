@@ -1,0 +1,17 @@
+{
+    "name": "challenge-demo-streaming",
+    "version": "1.0.0",
+    "author": "Serkan Aysan",
+    "scripts": {
+        "client": "cd client && yarn start",
+        "server": "nodemon server.js",
+        "dev": "concurrently --kill-others-on-fail \"yarn server\" \"yarn client\""
+    },
+    "dependencies": {
+        "express": "^4.16.2",
+        "underscore": "^1.9.0"
+    },
+    "devDependencies": {
+        "concurrently": "^3.5.0"
+    }
+}
