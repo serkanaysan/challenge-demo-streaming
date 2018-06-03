@@ -1,49 +1,53 @@
 import React from 'react';
-import { Grid, Row } from 'react-bootstrap'
+import { Grid, Row, Col } from 'react-bootstrap';
+
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import { fetchMovies } from '../actions/movieActions';
 
 import PageTitle from './partials/PageTitle';
-import Item from './partials/Item';
 import Message from './partials/Message';
 
 class Movies extends React.Component {
 
-    constructor(props) {
-        super(props)
-
-        this.state = { rows: [], message: <Message message="Loading..." /> };
-        this.callApi()
-            .then(res => {
-                var items = []
-                res.forEach(movie => {
-                    var item = <Item key={items.length} item={movie} />
-                    items.push(item)
-                });
-                this.setState({ rows: items, message: "" });
-            })
-            .catch(err => {
-                console.log(err);
-                this.setState({message: <Message message="Opps, something went wrong..." />});
-            });
+    componentDidMount() {
+        this.props.fetchMovies();
     }
 
-    callApi = async () => {
-        const response = await fetch('/api/movies');
-        const body = await response.json();
-
-        if (response.status !== 200) throw Error(body.message);
-
-        return body;
-    };
-
-
     render() {
+        const { error, loading, movies } = this.props;
+
+        if (error) {
+            return (
+                <div>
+                    <PageTitle title="Popular Movies" />
+                    <Message message="Opps, something went wrong..." />
+                </div>
+            )
+        }
+
+        if (loading) {
+            return (
+                <div>
+                    <PageTitle title="Popular Movies" />
+                    <Message message="Loading..." />
+                </div>
+            )
+        }
+
         return (
             <div>
                 <PageTitle title="Popular Movies" />
                 <Grid>
                     <Row className="show-grid">
-                        {this.state.message}
-                        {this.state.rows}
+                        {movies.map(movie => (
+                            <Col key={movie.title} xs={12} sm={3} md={2} className="col-detailitem">
+                                <div className="detailitem">
+                                    <img alt={movie.title} src={movie.images.posterArt.url} />
+                                    <p>{movie.title}</p>
+                                </div>
+                            </Col>
+                        ))}
                     </Row>
                 </Grid>
             </div>
@@ -51,4 +55,15 @@ class Movies extends React.Component {
     }
 }
 
-export default Movies
+Movies.propTypes = {
+    fetchMovies: PropTypes.func.isRequired,
+    movies: PropTypes.array.isRequired
+}
+
+const mapStateToProps = state => ({
+    movies: state.movies.items,
+    loading: state.movies.loading,
+    error: state.movies.error
+});
+
+export default connect(mapStateToProps, { fetchMovies })(Movies);

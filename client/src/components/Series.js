@@ -1,49 +1,53 @@
 import React from 'react';
-import { Grid, Row } from 'react-bootstrap'
+import { Grid, Row, Col } from 'react-bootstrap';
+
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import { fetchSeries } from '../actions/seriesActions';
 
 import PageTitle from './partials/PageTitle';
-import Item from './partials/Item';
 import Message from './partials/Message';
 
 class Series extends React.Component {
 
-    constructor(props) {
-        super(props)
-
-        this.state = { rows: [], message: <Message message="Loading..." /> };
-        this.callApi()
-            .then(res => {
-                var items = []
-                res.forEach(series => {
-                    var item = <Item key={items.length} item={series} />
-                    items.push(item)
-                });
-                this.setState({ rows: items, message: "" });
-            })
-            .catch(err => {
-                console.log(err);
-                this.setState({message: <Message message="Opps, something went wrong..." />});
-            });
+    componentDidMount() {
+        this.props.fetchSeries();
     }
 
-    callApi = async () => {
-        const response = await fetch('/api/series');
-        const body = await response.json();
-
-        if (response.status !== 200) throw Error(body.message);
-
-        return body;
-    };
-
-
     render() {
+        const { error, loading, series } = this.props;
+
+        if (error) {
+            return (
+                <div>
+                    <PageTitle title="Popular Series" />
+                    <Message message="Opps, something went wrong..." />
+                </div>
+            )
+        }
+
+        if (loading) {
+            return (
+                <div>
+                    <PageTitle title="Popular Series" />
+                    <Message message="Loading..." />
+                </div>
+            )
+        }
+
         return (
             <div>
                 <PageTitle title="Popular Series" />
                 <Grid>
                     <Row className="show-grid">
-                        {this.state.message}
-                        {this.state.rows}
+                        {series.map(it => (
+                            <Col key={it.title} xs={12} sm={3} md={2} className="col-detailitem">
+                                <div className="detailitem">
+                                    <img alt={it.title} src={it.images.posterArt.url} />
+                                    <p>{it.title}</p>
+                                </div>
+                            </Col>
+                        ))}
                     </Row>
                 </Grid>
             </div>
@@ -51,4 +55,15 @@ class Series extends React.Component {
     }
 }
 
-export default Series
+Series.propTypes = {
+    fetchSeries: PropTypes.func.isRequired,
+    series: PropTypes.array.isRequired
+}
+
+const mapStateToProps = state => ({
+    series: state.series.items,
+    loading: state.series.loading,
+    error: state.series.error
+});
+
+export default connect(mapStateToProps, { fetchSeries })(Series);
